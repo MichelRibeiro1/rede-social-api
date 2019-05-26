@@ -1,27 +1,27 @@
-# Slim Framework 3 Skeleton Application
+## O que precisa ter:
 
-Use this skeleton application to quickly setup and start working on a new Slim Framework 3 application. This application uses the latest Slim 3 with the PHP-View template renderer. It also uses the Monolog logger.
+* :heavy_check_mark: Se cadastrar na rede social
+(ter foto de perfil)
 
-This skeleton application was built for Composer. This makes setting up a new Slim Framework application quick and easy.
+* :heavy_check_mark: Fazer login e logoff (só acessar as páginas internas estando logado)
 
-## Install the Application
+* Buscar usuário (informar se é amigo, se não é amigo ou se tem solicitação pendente)
 
-Run this command from the directory in which you want to install your new Slim Framework application.
+* Solicitar amizade (para quem não é amigo)
+* Cancelar amizade (para quem é amigo ou tem solicitação pendente)
+* Listar solicitações de amizade podendo aceitar ou cancelar
+* Fazer postagem contendo necessariamente texto e imagem
+* Poder apagar suas próprias postagens
+* Mostrar timeline principal contento as postagens dos amigos e as próprias postagens em ordem cronológica decrescente. Para cada post exibir:
 
-    php composer.phar create-project slim/slim-skeleton [my-app-name]
-
-Replace `[my-app-name]` with the desired directory name for your new application. You'll want to:
-
-* Point your virtual host document root to your new application's `public/` directory.
-* Ensure `logs/` is web writeable.
-
-To run the application in development, you can run these commands 
-
-	cd [my-app-name]
-	php composer.phar start
-
-Run this command in the application directory to run the test suite
-
-	php composer.phar test
-
-That's it! Now go build something cool.
+	nome/foto do autor
+	data da postagem
+	quantidade de curtidas
+	quantidade de comentários
+	texto da postagem
+	imagem da postagem
+* Ao clicar em algum usuário (amigo ou não) mostrar sua timeline, contendo apenas as postagens deste usuário
+* Poder curtir as postagens (apenas uma vez)
+* Poder comentar nas postagens (se for numa página separada, exibir os dados da postagem)
+* As imagens (de perfil e das postagens) não precisam ser cadastradas através de um upload, pode utilizar imagens já publicadas na internet através de URLs
+* A rede social deverá utilizar uma temática. Ex.: rede social de animais para adoção
