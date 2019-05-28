@@ -273,4 +273,62 @@ return function (App $app) {
             return $response->withJson(["auth-jwt" => $jwt], 200)
                 ->withHeader('Content-type', 'application/json');   
     });
+
+    $app->map(["GET", "POST"], "/me/posts", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $id = uniqid();
+        if ($request->isPost()) {
+            $input = $request->getParsedBody();
+            $query = $this->db->prepare("INSERT INTO posts (id, content_text, content_img, user_id, created_at) VALUES (
+                :id,
+                :content_text,
+                :content_img,
+                :user_id,
+                NOW()
+            )");
+            $query->bindParam(":id", $id);
+            $query->bindParam(":content_text", $input["text"]);
+            $query->bindParam(":content_img", $input["img"]);
+            $query->bindParam(":user_id", $me->{'id'});
+            $query->execute();
+
+            return $this->response->withStatus(200);
+        } else {
+            $query = $this->db->prepare("SELECT * FROM posts
+                WHERE user_id = :userId
+                AND deleted = 0
+            ");
+            $query->bindParam(":userId", $me->{'id'});
+            $query->execute();
+
+            $posts = $query->fetchAll();
+
+            return $this->response->withJson($posts);
+        }
+    });
+
+    $app->delete("/me/posts/{postId}", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        
+        $query = $this->db->prepare("UPDATE posts
+            SET deleted = 1
+            WHERE user_id = :userId
+            AND id = :postId
+            AND deleted = 0
+        ");
+
+        $query->bindParam(":userId", $me->{'id'});
+        $query->bindParam(":postId", $args["postId"]);
+        $query->execute();
+
+        return $this->response->withStatus(200);
+    });
 };
