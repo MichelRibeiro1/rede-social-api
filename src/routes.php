@@ -8,7 +8,34 @@ use Firebase\JWT\JWT;
 return function (App $app) {
     $container = $app->getContainer();
 
-    $app->map(["GET", "POST"], "/users", function (Request $request, Response $response, array $args) use ($container) {
+    $app->get("/me", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $user = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        return $this->response->withJson($user);
+    });
+
+    $app->get("/search/user", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $params = $request->getQueryParams();
+        $userQuery = $this->db->prepare("SELECT id, name, email, profile_img_url, description
+            FROM users
+            WHERE deleted = 0
+            AND name LIKE CONCAT('%', :name, '%')
+        ");
+        $userQuery->bindParam(":name", $params["name"]);
+        $userQuery->execute();
+        $users = $userQuery->fetchAll();
+
+        return $this->response->withJson($users);
+    });
+
+    $app->map(["GET", "POST"], "/users/{userId}", function (Request $request, Response $response, array $args) use ($container) {
         if ($request->isPost()) {
             $input = $request->getParsedBody();
             $id = uniqid();
