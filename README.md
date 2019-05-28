@@ -7,8 +7,8 @@
 
 * Buscar usuário (informar se é amigo, se não é amigo ou se tem solicitação pendente)
 
-* Solicitar amizade (para quem não é amigo)
-* Cancelar amizade (para quem é amigo ou tem solicitação pendente)
+* :heavy_check_mark: Solicitar amizade (para quem não é amigo)
+* :heavy_check_mark: Cancelar amizade (para quem é amigo ou tem solicitação pendente)
 * Listar solicitações de amizade podendo aceitar ou cancelar
 * Fazer postagem contendo necessariamente texto e imagem
 * Poder apagar suas próprias postagens
