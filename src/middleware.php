@@ -7,7 +7,7 @@ return function (App $app) {
     $app->add(new Tuupola\Middleware\CorsMiddleware([
         "origin" => ["*"],
         "methods" => ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        "headers.allow" => ["X-token"],
+        "headers.allow" => ["*"],
         "headers.expose" => [],
         "credentials" => false,
         "cache" => 0,
