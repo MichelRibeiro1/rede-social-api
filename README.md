@@ -9,7 +9,7 @@
 
 * :heavy_check_mark: Solicitar amizade (para quem não é amigo)
 * :heavy_check_mark: Cancelar amizade (para quem é amigo ou tem solicitação pendente)
-* Listar solicitações de amizade podendo aceitar ou cancelar
+* :heavy_check_mark: Listar solicitações de amizade podendo aceitar ou cancelar
 * Fazer postagem contendo necessariamente texto e imagem
 * Poder apagar suas próprias postagens
 * Mostrar timeline principal contento as postagens dos amigos e as próprias postagens em ordem cronológica decrescente. Para cada post exibir:
