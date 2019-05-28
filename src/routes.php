@@ -76,9 +76,77 @@ return function (App $app) {
             if (!isset($headers["HTTP_X_TOKEN"])) {
                 return $this->response->withStatus(403);
             }
-            $user = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+            $query = $this->db->prepare("SELECT name, email, profile_img_url, description
+                FROM users
+                WHERE id = :userId
+                AND deleted = 0
+            ");
+            $query->bindParam(":userId", $args["userId"]);
+            $query->execute();
+            $user = $query->fetch();
+
             return $this->response->withJson($user);
         }
+    });
+
+    $app->get("/users/{userId}/invite", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $query = $this->db->prepare("SELECT * FROM relations
+            WHERE user_id IN (:userId, :targetId)
+            AND target_id IN (:userId, :targetId)
+            AND deleted = 0
+            AND status IN ('pending', 'accepted')
+        ");
+        $query->bindParam(":userId", $me->{'id'});
+        $query->bindParam(":targetId", $args["userId"]);
+        $query->execute();
+        $invitation = $query->fetch();
+
+        if ($invitation !== false) {
+            return $this->response->withStatus(409);
+        }
+        $id = uniqid();
+        $query = $this->db->prepare("INSERT INTO relations (id, user_id, target_id, created_at) VALUES (
+            :id,
+            :userId,
+            :targetId,
+            NOW()
+        )
+        ");
+
+        $query->bindParam(":id", $id);
+        $query->bindParam(":userId", $me->{'id'});
+        $query->bindParam(":targetId", $args["userId"]);
+        $query->execute();
+
+        return $this->response->withStatus(200);
+
+    });
+
+    $app->get("/users/{userId}/invite/cancel", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+
+        $query = $this->db->prepare("UPDATE relations
+            SET status = 'canceled'
+            WHERE user_id = :userId
+            AND target_id = :targetId
+            AND deleted = 0
+        ");
+
+        $query->bindParam(":userId", $me->{'id'});
+        $query->bindParam(":targetId", $args["userId"]);
+        $query->execute();
+
+        return $this->response->withStatus(200);
     });
 
     $app->post("/auth", function (Request $request, Response $response, array $args) use ($container) {
@@ -91,7 +159,7 @@ return function (App $app) {
         }
 
         $hash = md5($input["password"]);
-        $userQuery = $this->db->prepare("SELECT name, email, profile_img_url, description
+        $userQuery = $this->db->prepare("SELECT id, name, email, profile_img_url, description
             FROM users
             WHERE deleted = 0
             AND email = :email
@@ -112,6 +180,7 @@ return function (App $app) {
 
         $token = array(
             "email" => $user["email"],
+            "id" => $user["id"],
             "name" => $user["name"],
             "description" => $user["description"],
             "profile_img_url" => $user["profile_img_url"]
