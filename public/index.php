@@ -10,7 +10,7 @@ if (PHP_SAPI == 'cli-server') {
 }
 
 require __DIR__ . '/../vendor/autoload.php';
-
+use Tuupola\Middleware\CorsMiddleware;
 session_start();
 
 // Instantiate the app
