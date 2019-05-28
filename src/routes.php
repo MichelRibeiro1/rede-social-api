@@ -8,6 +8,12 @@ use Firebase\JWT\JWT;
 return function (App $app) {
     $container = $app->getContainer();
 
+    $app->get("/ping", function(Request $request, Response $response, array $args) use ($container) {
+        $body = $this->response->getBody();
+        $body->write("PONG");
+        return $this->response->withStatus(200);
+    });
+
     $app->get("/me", function (Request $request, Response $response, array $args) use ($container) {
         $headers = $request->getHeaders();
         if (!isset($headers["HTTP_X_TOKEN"])) {
