@@ -5,7 +5,7 @@
 
 * :heavy_check_mark: Fazer login e logoff (só acessar as páginas internas estando logado)
 
-* Buscar usuário (informar se é amigo, se não é amigo ou se tem solicitação pendente)
+* :heavy_check_mark: Buscar usuário (informar se é amigo (pendente), se não é amigo ou se tem solicitação pendente)
 
 * :heavy_check_mark: Solicitar amizade (para quem não é amigo)
 * :heavy_check_mark: Cancelar amizade (para quem é amigo ou tem solicitação pendente)
