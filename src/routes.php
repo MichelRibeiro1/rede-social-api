@@ -331,4 +331,59 @@ return function (App $app) {
 
         return $this->response->withStatus(200);
     });
+
+    $app->map(["POST", "DELETE"], "/posts/{postId}/like", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+
+        if ($request->isPost()) {
+            $query = $this->db->prepare("SELECT * FROM post_likes
+                WHERE user_id = :userId
+                AND post_id = :postId
+                AND deleted = 0
+            ");
+
+            $query->bindParam(":userId", $me->{'id'});
+            $query->bindParam(":postId", $args["postId"]);
+            $query->execute();
+            $like = $query->fetch();
+
+            if ($like !== false) {
+                $body = $this->response->getBody();
+                $body->write('Já curtido');
+                return $this->response->withStatus(409);
+            }
+
+            $likeQuery = $this->db->prepare("INSERT INTO post_likes (id, post_id, user_id, created_at) VALUES (
+                :id,
+                :postId,
+                :userId,
+                NOW()
+            )");
+
+            $likeQuery->bindParam(":id", uniqid());
+            $likeQuery->bindParam(":userId", $me->{'id'});
+            $likeQuery->bindParam(":postId", $args["postId"]);
+            $likeQuery->execute();
+
+            return $this->response->withStatus(200);
+        } else {
+            $query = $this->db->prepare("UPDATE post_likes
+                SET deleted = 1
+                WHERE user_id = :userId
+                AND post_id = :postId
+                AND deleted = 0
+            ");
+
+
+            $query->bindParam(":userId", $me->{'id'});
+            $query->bindParam(":postId", $args["postId"]);
+            $query->execute();
+
+            return $this->response->withStatus(200);
+        }
+    });
 };

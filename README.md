@@ -20,7 +20,7 @@
 	* texto da postagem
 	* imagem da postagem
 * Ao clicar em algum usuário (amigo ou não) mostrar sua timeline, contendo apenas as postagens deste usuário
-* Poder curtir as postagens (apenas uma vez)
+* :heavy_check_mark: Poder curtir as postagens (apenas uma vez)
 * Poder comentar nas postagens (se for numa página separada, exibir os dados da postagem)
 * :heavy_check_mark: As imagens (de perfil e das postagens) não precisam ser cadastradas através de um upload, pode utilizar imagens já publicadas na internet através de URLs
 * :heavy_check_mark: A rede social deverá utilizar uma temática. Ex.: rede social de animais para adoção
