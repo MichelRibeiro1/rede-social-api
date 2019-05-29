@@ -214,22 +214,24 @@ return function (App $app) {
         $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
 
         $query = $this->db->prepare("SELECT
-            u.id user_id,
-            name,
-            email,
-            description,
-            profile_img_url
+            u.id as id,
+            u.name as name,
+            u.email as email,
+            u.description as description,
+            u.profile_img_url as img_url
             FROM relations r
             LEFT JOIN users u
-            ON r.user_id = u.id AND r.target_id = u.id -- TODO: Use this with With statement
-            -- WHERE (user_id = :userId OR target_id = :userId) AND (deleted = 0 AND status = 'accepted')
+            ON r.user_id = u.id OR r.target_id = u.id
+            WHERE (r.user_id = :userId OR r.target_id = :userId)
+            AND (u.deleted = 0 AND r.deleted = 0 AND status = 'accepted')
+            AND u.id != :userId
         ");
 
         $query->bindParam(":userId", $me->{'id'});
-        $query->bindParam(":userId", $me->{'id'});
         $query->execute();
+        $friends = $query->fetchAll();
 
-        return $this->response->withStatus(200);
+        return $this->response->withJson($friends);
     });
 
     $app->post("/auth", function (Request $request, Response $response, array $args) use ($container) {
@@ -330,6 +332,42 @@ return function (App $app) {
         $query->execute();
 
         return $this->response->withStatus(200);
+    });
+
+    $app->get("/me/timeline", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        
+        $query = $this->db->prepare("SELECT 
+                u.id as userId,
+                u.profile_img_url as user_img_url,
+                u.name as user_name,
+                p.content_text as content,
+                p.content_img as post_img,
+                p.created_at as post_created_at,
+                p.id as post_id
+                FROM posts p
+                LEFT JOIN users u
+                ON p.user_id = u.id
+                WHERE (user_id IN (
+                SELECT u.id
+                FROM relations r
+                LEFT JOIN users u
+                ON r.user_id = u.id OR r.target_id = u.id
+                WHERE (r.user_id = :userId OR r.target_id = :userId)
+                AND (u.deleted = 0 AND r.deleted = 0 AND status = 'accepted')
+                AND u.id != :userId
+            ) OR user_id = :userId ) AND p.deleted = 0 ORDER BY p.created_at DESC;
+        ");
+
+        $query->bindParam(":userId", $me->{'id'});
+        $query->execute();
+        $posts = $query->fetchAll();
+
+        return $this->response->withJson($posts);
     });
 
     $app->map(["POST", "DELETE"], "/posts/{postId}/like", function (Request $request, Response $response, array $args) use ($container) {

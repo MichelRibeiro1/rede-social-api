@@ -13,12 +13,12 @@
 * :heavy_check_mark: Fazer postagem contendo necessariamente texto e imagem
 * :heavy_check_mark: Poder apagar suas próprias postagens
 * Mostrar timeline principal contento as postagens dos amigos e as próprias postagens em ordem cronológica decrescente. Para cada post exibir:
-	* nome/foto do autor
-	* data da postagem
+	* :heavy_check_mark: nome/foto do autor
+	* :heavy_check_mark: data da postagem
 	* quantidade de curtidas
 	* quantidade de comentários
-	* texto da postagem
-	* imagem da postagem
+	* :heavy_check_mark: texto da postagem
+	* :heavy_check_mark: imagem da postagem
 * Ao clicar em algum usuário (amigo ou não) mostrar sua timeline, contendo apenas as postagens deste usuário
 * :heavy_check_mark: Poder curtir as postagens (apenas uma vez)
 * Poder comentar nas postagens (se for numa página separada, exibir os dados da postagem)
