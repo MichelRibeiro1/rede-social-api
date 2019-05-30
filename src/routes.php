@@ -8,6 +8,10 @@ use Firebase\JWT\JWT;
 return function (App $app) {
     $container = $app->getContainer();
 
+    $app->get('/', function (Request $request, Response $response, array $args) use ($container) {
+        return $container->get('renderer')->render($response, 'index.phtml', $args);
+    });
+
     $app->get("/ping", function(Request $request, Response $response, array $args) use ($container) {
         $body = $this->response->getBody();
         $body->write("PONG");
