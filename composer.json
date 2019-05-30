@@ -32,7 +32,7 @@
         "sort-packages": true
     },
     "scripts": {
-        "start": "php -S localhost:80 -t public",
+        "start": "php -S localhost:3000 -t public",
         "test": "phpunit"
     }
 }
