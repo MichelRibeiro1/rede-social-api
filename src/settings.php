@@ -16,10 +16,10 @@ return [
             'level' => \Monolog\Logger::DEBUG,
         ],
         "db" => [
-            "host" => "localhost",
-            "dbname" => "rede_social",
-            "user" => "root",
-            "pass" => "root"
+            "host" => getenv("DBHOST"),
+            "dbname" => getenv("DBNAME"),
+            "user" => getenv("DBUSER"),
+            "pass" => getenv("DBPASSWORD")
         ]
     ],
 ];

@@ -19,7 +19,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $user = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $user = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
         return $this->response->withJson($user);
     });
 
@@ -28,7 +28,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
         $params = $request->getQueryParams();
         $userQuery = $this->db->prepare("SELECT id, name, email, profile_img_url, description
             FROM users
@@ -104,7 +104,7 @@ return function (App $app) {
             return $this->response->withStatus(403);
         }
 
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
         $query = $this->db->prepare("SELECT * FROM relations
             WHERE user_id IN (:userId, :targetId)
             AND target_id IN (:userId, :targetId)
@@ -142,7 +142,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
 
         $query = $this->db->prepare("UPDATE relations
             SET status = 'canceled'
@@ -163,7 +163,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
 
         $query = $this->db->prepare("SELECT
             r.id invitation_id,
@@ -190,7 +190,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
 
         $query = $this->db->prepare("UPDATE relations
             SET status = 'accepted'
@@ -211,7 +211,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
 
         $query = $this->db->prepare("SELECT
             u.id as id,
@@ -271,7 +271,7 @@ return function (App $app) {
             "profile_img_url" => $user["profile_img_url"]
         );
 
-        $jwt = JWT::encode($token, "chave_secreta");
+        $jwt = JWT::encode($token, getenv("SECRET_KEY"));
             return $response->withJson(["auth-jwt" => $jwt], 200)
                 ->withHeader('Content-type', 'application/json');   
     });
@@ -281,7 +281,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
         $id = uniqid();
         if ($request->isPost()) {
             $input = $request->getParsedBody();
@@ -318,7 +318,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
         
         $query = $this->db->prepare("UPDATE posts
             SET deleted = 1
@@ -339,7 +339,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
         
         $query = $this->db->prepare("SELECT 
                 u.id as userId,
@@ -375,7 +375,7 @@ return function (App $app) {
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
         }
-        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], "chave_secreta", array('HS256'));
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
 
         if ($request->isPost()) {
             $query = $this->db->prepare("SELECT * FROM post_likes
