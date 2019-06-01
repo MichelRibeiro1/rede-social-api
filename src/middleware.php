@@ -3,13 +3,11 @@
 use Slim\App;
 
 return function (App $app) {
-    // e.g: $app->add(new \Slim\Csrf\Guard);
-    $app->add(new Tuupola\Middleware\CorsMiddleware([
-        "origin" => ["*"],
-        "methods" => ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        "headers.allow" => ["*"],
-        "headers.expose" => [],
-        "credentials" => false,
-        "cache" => 0,
-    ]));
+    $app->add(function ($req, $res, $next) {
+    $response = $next($req, $res);
+    return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-token')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    });
 };
