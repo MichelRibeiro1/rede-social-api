@@ -44,8 +44,26 @@ return function (App $app) {
         $userQuery->bindParam(":id", $me->{'id'});
         $userQuery->execute();
         $users = $userQuery->fetchAll();
+        $mappedUsers = array_map(function ($user) {
+            $query = $this->db->prepare("SELECT status
+                FROM relations
+                WHERE deleted = 0
+                AND (user_id IN (:userId, :targetId) OR target_id IN (:userId, :targetId))
+                AND status != 'canceled'
+            ");
+            $query->bindParam(":userId", $me->{'id'});
+            $query->bindParam(":targetId", $user["id"]);
+            $query->execute();
+            $relation = $query->fetch();
 
-        return $this->response->withJson($users);
+            if ($relation !== false){
+                $user["relation_status"] = $relation["status"];
+            } else {
+                $user["relation_status"] = null;
+            }
+            return $user;
+        }, $users);
+        return $this->response->withJson($mappedUsers);
     });
 
     $app->map(["GET", "POST"], "/users/{userId}", function (Request $request, Response $response, array $args) use ($container) {
@@ -100,6 +118,67 @@ return function (App $app) {
 
             return $this->response->withJson($user);
         }
+    });
+
+    $app->get("/users/{userId}/timeline", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
+        $query = $this->db->prepare("SELECT 
+            u.id as userId,
+            u.profile_img_url as user_img_url,
+            u.name as user_name,
+            p.content_text as content,
+            p.content_img as post_img,
+            p.created_at as post_created_at,
+            p.id as post_id
+            FROM posts p
+            LEFT JOIN users u
+            ON p.user_id = u.id
+            WHERE p.user_id = :userId
+            AND p.deleted = 0
+            ORDER BY p.created_at DESC;
+        ");
+        $query->bindParam(":userId", $args["userId"]);
+        $query->execute();
+        $posts = $query->fetchAll();
+
+        $postsMapped = array_map(function ($post){
+            $query = $this->db->prepare("SELECT COUNT(id) as count FROM post_likes
+                WHERE post_id = :postId
+                AND deleted = 0
+            ");
+            $query->bindParam(":postId", $post["post_id"]);
+            $query->execute();
+            $likes_count = $query->fetch();
+
+            $query = $this->db->prepare("SELECT
+                u.id as userId,
+                u.name as user_name,
+                u.profile_img_url as user_img,
+                pc.content as user_comment,
+                pc.created_at as created_at
+                FROM post_comments as pc
+                LEFT JOIN users u
+                ON pc.user_id = u.id
+                WHERE pc.post_id = :postId
+                AND pc.deleted = 0
+                AND u.deleted = 0
+            ");
+
+            $query->bindParam(":postId", $post["post_id"]);
+            $query->execute();
+            $comments = $query->fetchAll();
+
+            $post["comments_count"] = sizeof($comments);
+            $post["comments"] = $comments;
+            $post["likes_count"] = $likes_count["count"];
+            return $post;
+        }, $posts);
+
+        return $this->response->withJson($postsMapped);
     });
 
     $app->get("/users/{userId}/invite", function (Request $request, Response $response, array $args) use ($container) {
@@ -371,7 +450,40 @@ return function (App $app) {
         $query->execute();
         $posts = $query->fetchAll();
 
-        return $this->response->withJson($posts);
+        $postsMapped = array_map(function ($post){
+            $query = $this->db->prepare("SELECT COUNT(id) as count FROM post_likes
+                WHERE post_id = :postId
+                AND deleted = 0
+            ");
+            $query->bindParam(":postId", $post["post_id"]);
+            $query->execute();
+            $likes_count = $query->fetch();
+
+            $query = $this->db->prepare("SELECT
+                u.id as userId,
+                u.name as user_name,
+                u.profile_img_url as user_img,
+                pc.content as user_comment,
+                pc.created_at as created_at
+                FROM post_comments as pc
+                LEFT JOIN users u
+                ON pc.user_id = u.id
+                WHERE pc.post_id = :postId
+                AND pc.deleted = 0
+                AND u.deleted = 0
+            ");
+
+            $query->bindParam(":postId", $post["post_id"]);
+            $query->execute();
+            $comments = $query->fetchAll();
+
+            $post["comments_count"] = sizeof($comments);
+            $post["comments"] = $comments;
+            $post["likes_count"] = $likes_count["count"];
+            return $post;
+        }, $posts);
+
+        return $this->response->withJson($postsMapped);
     });
 
     $app->map(["POST", "DELETE"], "/posts/{postId}/like", function (Request $request, Response $response, array $args) use ($container) {
@@ -427,5 +539,53 @@ return function (App $app) {
 
             return $this->response->withStatus(200);
         }
+    });
+
+    $app->post("/posts/{postId}/comment", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
+        $input = $request->getParsedBody();
+        $query = $this->db->prepare("INSERT INTO post_comments (id, post_id, user_id, content, created_at) VALUES (
+            :id,
+            :postId,
+            :userId,
+            :content,
+            NOW()
+        )");
+
+        $query->bindParam(":id", uniqid());
+        $query->bindParam(":postId", $args["postId"]);
+        $query->bindParam(":userId", $me->{'id'});
+        $query->bindParam(":content", $input["content"]);
+        $query->execute();
+
+        return $this->response->withStatus(200);
+    });
+
+    $app->delete("/posts/{postId}/comment/{commentId}", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
+        $input = $request->getParsedBody();
+
+        $query = $this->db->prepare("UPDATE post_comments
+            SET deleted = 1
+            WHERE user_id = :userId
+            AND post_id = :postId
+            AND id = :commentId
+            AND deleted = 0
+        ");
+
+        $likeQuery->bindParam(":userId", $me->{'id'});
+        $likeQuery->bindParam(":postId", $args["postId"]);
+        $likeQuery->bindParam(":commentId", $args["commentId"]);
+        $likeQuery->execute();
+
+        return $this->response->withStatus(200);
     });
 };
