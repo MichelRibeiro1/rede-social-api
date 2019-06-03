@@ -220,7 +220,7 @@ return function (App $app) {
 
     });
 
-    $app->get("/users/{userId}/invite/cancel", function (Request $request, Response $response, array $args) use ($container) {
+    $app->get("/me/invitations/{invitationId}/reject", function (Request $request, Response $response, array $args) use ($container) {
         $headers = $request->getHeaders();
         if (!isset($headers["HTTP_X_TOKEN"])) {
             return $this->response->withStatus(403);
@@ -229,13 +229,31 @@ return function (App $app) {
 
         $query = $this->db->prepare("UPDATE relations
             SET status = 'canceled'
-            WHERE user_id = :userId
-            AND target_id = :targetId
+            WHERE id = :id
+        ");
+
+        $query->bindParam(":id", $args["invitationId"]);
+        $query->execute();
+
+        return $this->response->withStatus(200);
+    });
+
+    $app->get("/me/friends/{userId}/cancel", function (Request $request, Response $response, array $args) use ($container) {
+        $headers = $request->getHeaders();
+        if (!isset($headers["HTTP_X_TOKEN"])) {
+            return $this->response->withStatus(403);
+        }
+        $me = JWT::decode($headers["HTTP_X_TOKEN"][0], getenv("SECRET_KEY"), array('HS256'));
+
+        $query = $this->db->prepare("UPDATE relations
+            SET status = 'canceled'
+            WHERE status = 'accepted'
+            AND (userId IN (:userId, :meId) OR targetId IN (:userId, :meId))
             AND deleted = 0
         ");
 
-        $query->bindParam(":userId", $me->{'id'});
-        $query->bindParam(":targetId", $args["userId"]);
+        $query->bindParam(":userId", $args["userId"]);
+        $query->bindParam(":meId", $me->{'id'});
         $query->execute();
 
         return $this->response->withStatus(200);
