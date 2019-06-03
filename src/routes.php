@@ -82,6 +82,10 @@ return function (App $app) {
                 return $this->response->withStatus(409);
             }
 
+            if ($input["profile_img_url"] === "") {
+                $input["profile_img_url"] = "https://gazettereview.com/wp-content/uploads/2016/03/facebook-avatar.jpg";
+            }
+
             $sth = $this->db->prepare("INSERT INTO users (id, name, email, profile_img_url, description, deleted, created_at, password) VALUES (
                     :id,
                     :name,
