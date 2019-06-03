@@ -252,7 +252,7 @@ return function (App $app) {
         $query = $this->db->prepare("UPDATE relations
             SET status = 'canceled'
             WHERE status = 'accepted'
-            AND (userId IN (:userId, :meId) OR targetId IN (:userId, :meId))
+            AND (user_id IN (:userId, :meId) OR target_id IN (:userId, :meId))
             AND deleted = 0
         ");
 
